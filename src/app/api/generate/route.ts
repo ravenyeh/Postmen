@@ -35,15 +35,27 @@ const LENGTH_LIMITS: Record<string, string> = {
   medium: "100-200字",
 };
 
-// 模板對應說明
+// 模板對應說明 - 基於 Threads 爆款研究
 const TEMPLATE_INSTRUCTIONS: Record<TemplateType, string> = {
-  story: "故事型：情境 → 轉折 → 領悟。例如「以前我以為…後來才發現…」",
-  question: "問題型：拋出引人思考的問題。例如「你有沒有想過，為什麼…？」",
-  list: "清單型：數字 + 重點列舉。例如「工程師必備的 3 個習慣：」",
-  contrast: "反差型：期待 vs 現實。例如「別人以為我在…其實我在…」",
-  quote: "金句型：一句話觀點，精煉有力。例如「真正的成長是…」",
-  sarcastic: "吐槽型：共鳴痛點 + 幽默。例如「每次說好只看一集，結果…」",
+  story: "故事型（反常識）：你以為（常識）是對的？其實（反直覺結論）才是重點。用轉折製造驚喜。",
+  question: "問題型（問句引戰）：為什麼（現象）越努力越沒用？答案其實很簡單。引發思考和討論。",
+  list: "清單型（數字清單）：3 個（方法/雷點/原則），讓你在（情境）立刻變好。具體有感。",
+  contrast: "反差型（對立選邊）：關於（議題），只分兩種人：（A）跟（B）。你是哪種？製造認同。",
+  quote: "金句型（下斷言）：先說結論：在（情境）裡，（做法A）比（做法B）有效 10 倍。直接有力。",
+  sarcastic: "吐槽型（錯誤警告）：90% 的人做（某事）都錯在第 1 步。點出痛點引共鳴。",
 };
+
+// 8 種吸睛開頭句型（基於 Threads 爆款研究）
+const HOOK_PATTERNS = [
+  "反常識：你以為（常識）是對的？其實（反直覺結論）才是重點。",
+  "痛點直擊：如果你也卡在（痛點），先做這 1 件事就好。",
+  "下斷言：先說結論：在（情境）裡，（做法A）比（做法B）有效 10 倍。",
+  "對立選邊：關於（議題），只分兩種人：（A）跟（B）。你是哪種？",
+  "數字清單：3 個（方法/雷點/原則），讓你在（情境）立刻變好。",
+  "省時省錢：我用（時間/成本）試出來的：別再（錯誤做法）。",
+  "錯誤警告：90% 的人做（某事）都錯在第 1 步。",
+  "問句引戰：為什麼（現象）越努力越沒用？答案其實很簡單。",
+];
 
 // MVP 階段使用的模板（故事型、反差型、金句型）
 const MVP_TEMPLATES: TemplateType[] = ["story", "contrast", "quote"];
@@ -59,57 +71,65 @@ function getMockTrends(): string[] {
   return trends.sort(() => Math.random() - 0.5).slice(0, 3);
 }
 
-// 建構 Prompt - 結合即時搜尋爆款貼文特徵
+// 建構 Prompt - 基於 Threads 爆款研究的具體技巧
 function buildPrompt(input: UserInput, trends: string[]): string {
   const selectedTemplates = MVP_TEMPLATES.slice(0, input.variations);
   const templateInstructions = selectedTemplates
     .map((t, i) => `${i + 1}. ${TEMPLATE_INSTRUCTIONS[t]}`)
     .join("\n");
 
-  return `你是一個專業的社群媒體文案專家。在生成貼文之前，請先搜尋並分析以下資訊：
+  // 隨機選取幾個 hook 句型作為參考
+  const shuffledHooks = [...HOOK_PATTERNS].sort(() => Math.random() - 0.5);
+  const selectedHooks = shuffledHooks.slice(0, 4).map((h, i) => `${i + 1}. ${h}`).join("\n");
 
-【第一步：搜尋分析】
-請搜尋「Threads 爆款貼文特徵」、「高互動社群貼文結構」、「台灣 Threads 熱門貼文」等關鍵字，了解：
-1. 目前 Threads 上高互動貼文的共同特徵
-2. 什麼樣的開頭最能抓住注意力
-3. 哪些話題和表達方式最容易引發共鳴
-4. 成功的貼文通常有什麼結構
+  return `你是專精 Threads 爆款貼文的文案專家。請根據以下經過驗證的爆款技巧來創作。
 
-【第二步：應用分析結果生成貼文】
+【Threads 爆款核心法則】
+1. 開頭第 1-2 行就要「直奔主題」，用痛點、好奇或反差把人留住
+2. 不要先鋪陳背景，不要用「大家好」「今天想聊聊」這類開場
+3. Threads 限制 500 字，用短句、碎段落，讓第一句夠狠、夠清楚
+4. 製造「好奇心差距」：先下斷言，暗示原因在後面
 
-用戶設定：
+【開頭公式】
+受眾 + 痛點/目標 + 反差結論 + 讓人想追問的缺口
+例如：「給（受眾）：你一直（痛點）不是因為不夠努力，而是（反差結論）」
+
+【8 種吸睛開頭句型，請選擇適合的使用】
+${selectedHooks}
+
+【用戶設定】
 - 身份定位：${PERSONA_DESCRIPTIONS[input.persona]}
 - 主題/靈感：${input.topic}
 - 語氣風格：${TONE_DESCRIPTIONS[input.tone]}
 - 字數限制：${LENGTH_LIMITS[input.length]}
-- 使用 Emoji：${input.includeEmoji ? "是，適當使用 emoji 增加趣味" : "否，不使用 emoji"}
+- 使用 Emoji：${input.includeEmoji ? "是，適當使用 emoji 增加趣味但不過量" : "否，不使用 emoji"}
 
-${input.includeTrend && trends.length > 0 ? `當前熱門話題參考：${trends.join("、")}\n可以嘗試巧妙融入這些話題元素，但不要生硬。` : ""}
+${input.includeTrend && trends.length > 0 ? `【當前熱門話題】\n${trends.join("、")}\n巧妙融入但不生硬。` : ""}
 
-請根據你搜尋到的爆款貼文特徵，產生 ${input.variations} 個版本的 Threads 貼文，每個使用不同的文案框架：
+【任務】
+產生 ${input.variations} 個版本的 Threads 貼文，每個使用不同的文案框架：
 
 ${templateInstructions}
 
 【重要規則】
-1. 貼文要接地氣，符合台灣年輕人的說話方式
-2. 運用你搜尋到的爆款貼文技巧（如：懸念開頭、情緒共鳴、反轉結尾等）
-3. 內容要有記憶點，讓人想按讚或分享
-4. 避免說教或太正經，要有社群感
-5. 每個版本要有明顯不同的切入角度
-6. 字數嚴格控制在限制內
+1. 開頭第一句就要抓住注意力，禁止平淡開場
+2. 符合台灣年輕人說話方式，接地氣有社群感
+3. 每個版本切入角度明顯不同
+4. 字數嚴格控制在限制內
+5. 用短句、適當換行增加可讀性
 
 【輸出格式】
-請以 JSON 格式輸出，格式如下：
+請以 JSON 格式輸出：
 {
   "posts": [
     {
       "content": "貼文內容",
       "template": "story|contrast|quote",
       "hashtags": ["建議的hashtag，2-3個"],
-      "reasoning": "說明這個版本運用了什麼爆款技巧"
+      "reasoning": "說明使用了哪種開頭句型和爆款技巧"
     }
   ],
-  "viralTechniques": ["列出你從搜尋中發現並應用的爆款技巧，2-3個"]
+  "viralTechniques": ["列出本次應用的爆款技巧，2-3個"]
 }
 
 只輸出 JSON，不要有其他文字。`;
@@ -313,42 +333,49 @@ function getMockResponse(input: UserInput, currentTrends?: string[]): Generation
     ? (currentTrends?.slice(0, 3) || getMockTrends())
     : [];
 
-  const mockPosts: Record<TemplateType, { content: string; hashtags: string[] }> = {
+  // 使用爆款開頭句型的模擬貼文
+  const mockPosts: Record<TemplateType, { content: string; hashtags: string[]; reasoning: string }> = {
     story: {
       content: input.includeEmoji
-        ? `以前我以為${input.topic}只是說說而已\n後來才發現，這真的會改變一切 🤯\n\n現在回頭看，還好當初沒放棄`
-        : `以前我以為${input.topic}只是說說而已\n後來才發現，這真的會改變一切\n\n現在回頭看，還好當初沒放棄`,
-      hashtags: ["#人生體悟", "#成長日記"],
+        ? `你以為${input.topic}很簡單？\n\n錯。我踩了 3 個月的雷才搞懂：\n問題從來不是不夠努力 🤯\n\n是方向錯了`
+        : `你以為${input.topic}很簡單？\n\n錯。我踩了 3 個月的雷才搞懂：\n問題從來不是不夠努力\n\n是方向錯了`,
+      hashtags: ["#血淚經驗", "#成長"],
+      reasoning: "使用「反常識」開頭句型，先挑戰認知再給結論",
     },
     contrast: {
       content: input.includeEmoji
-        ? `別人以為我在研究${input.topic}\n其實我在想今天中午要吃什麼 🍜\n\n專注？不存在的`
-        : `別人以為我在研究${input.topic}\n其實我在想今天中午要吃什麼\n\n專注？不存在的`,
-      hashtags: ["#真實日常", "#社畜心聲"],
+        ? `關於${input.topic}，只分兩種人：\n\n一種卡在原地抱怨\n一種早就默默行動了 🚀\n\n你是哪種？`
+        : `關於${input.topic}，只分兩種人：\n\n一種卡在原地抱怨\n一種早就默默行動了\n\n你是哪種？`,
+      hashtags: ["#選邊站", "#行動派"],
+      reasoning: "使用「對立選邊」句型，製造認同感和互動",
     },
     quote: {
       content: input.includeEmoji
-        ? `關於${input.topic}這件事\n真正的高手從不解釋，只用結果說話 💪`
-        : `關於${input.topic}這件事\n真正的高手從不解釋，只用結果說話`,
-      hashtags: ["#金句", "#人生哲學"],
+        ? `先說結論：\n\n在${input.topic}這件事上\n做對方向比埋頭苦幹有效 10 倍 💡\n\n別再用戰術的勤奮掩蓋戰略的懶惰`
+        : `先說結論：\n\n在${input.topic}這件事上\n做對方向比埋頭苦幹有效 10 倍\n\n別再用戰術的勤奮掩蓋戰略的懶惰`,
+      hashtags: ["#結論先行", "#效率"],
+      reasoning: "使用「下斷言」句型，直接給出有力結論",
     },
     question: {
       content: input.includeEmoji
-        ? `你有沒有想過\n為什麼${input.topic}總是這麼難？🤔\n\n說真的，我到現在還在想`
-        : `你有沒有想過\n為什麼${input.topic}總是這麼難？\n\n說真的，我到現在還在想`,
-      hashtags: ["#問題", "#思考"],
+        ? `為什麼${input.topic}越努力越沒用？🤔\n\n答案其實很簡單：\n你努力的方式本身就是錯的\n\n（往下滑我解釋）`
+        : `為什麼${input.topic}越努力越沒用？\n\n答案其實很簡單：\n你努力的方式本身就是錯的\n\n（往下滑我解釋）`,
+      hashtags: ["#問題", "#思維"],
+      reasoning: "使用「問句引戰」句型，引發好奇心",
     },
     list: {
       content: input.includeEmoji
-        ? `關於${input.topic}，3個必知重點：\n\n1️⃣ 堅持比天份重要\n2️⃣ 方向比速度重要\n3️⃣ 行動比計劃重要`
-        : `關於${input.topic}，3個必知重點：\n\n1. 堅持比天份重要\n2. 方向比速度重要\n3. 行動比計劃重要`,
-      hashtags: ["#乾貨", "#筆記"],
+        ? `3 個${input.topic}的雷點，踩過的人都哭了：\n\n1️⃣ 太早想要速成\n2️⃣ 不願意花時間打基礎\n3️⃣ 一直換方法不堅持\n\n中了幾個？`
+        : `3 個${input.topic}的雷點，踩過的人都哭了：\n\n1. 太早想要速成\n2. 不願意花時間打基礎\n3. 一直換方法不堅持\n\n中了幾個？`,
+      hashtags: ["#避雷", "#乾貨"],
+      reasoning: "使用「數字清單」句型，具體有感",
     },
     sarcastic: {
       content: input.includeEmoji
-        ? `每次說好要認真${input.topic}\n結果刷了兩小時手機 📱\n\n時間管理大師，說的就是我（反話）`
-        : `每次說好要認真${input.topic}\n結果刷了兩小時手機\n\n時間管理大師，說的就是我（反話）`,
+        ? `90% 的人做${input.topic}都錯在第 1 步 😅\n\n不是不夠努力\n是還沒開始就選錯方向了\n\n（我就是那 90%）`
+        : `90% 的人做${input.topic}都錯在第 1 步\n\n不是不夠努力\n是還沒開始就選錯方向了\n\n（我就是那 90%）`,
       hashtags: ["#自嘲", "#真實"],
+      reasoning: "使用「錯誤警告」句型，用數據製造緊張感並引發共鳴",
     },
   };
 
@@ -361,11 +388,20 @@ function getMockResponse(input: UserInput, currentTrends?: string[]): Generation
       score: calculateEngagementScore(mock.content, template, input.includeTrend),
       hashtags: mock.hashtags,
       suggestedTime: getSuggestedTime(template),
+      reasoning: mock.reasoning,
     };
   });
+
+  // 模擬的爆款技巧列表
+  const mockViralTechniques = [
+    "開頭直奔主題，第 1-2 行抓住注意力",
+    "使用反差/對立製造好奇心差距",
+    "短句碎段落增加可讀性",
+  ];
 
   return {
     posts,
     trendUsed: input.includeTrend ? trends : undefined,
+    viralTechniques: mockViralTechniques,
   };
 }
