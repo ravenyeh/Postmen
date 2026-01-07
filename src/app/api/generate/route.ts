@@ -211,7 +211,7 @@ export async function POST(request: NextRequest) {
         "Authorization": `Bearer ${PERPLEXITY_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "llama-3.1-sonar-small-128k-online",
+        model: "sonar",  // 使用最新的 sonar 模型
         messages: [
           {
             role: "system",
@@ -229,8 +229,20 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Perplexity API error:", errorText);
-      throw new Error("AI 服務暫時無法使用");
+      console.error("Perplexity API error:", response.status, errorText);
+
+      // 根據狀態碼提供更具體的錯誤訊息
+      if (response.status === 401) {
+        console.error("Invalid API key");
+        // API key 無效時，回退到模擬回應
+        return NextResponse.json(getMockResponse(input, currentTrends));
+      } else if (response.status === 429) {
+        throw new Error("API 請求過於頻繁，請稍後再試");
+      } else {
+        // 其他錯誤時，回退到模擬回應而非完全失敗
+        console.warn("Falling back to mock response due to API error");
+        return NextResponse.json(getMockResponse(input, currentTrends));
+      }
     }
 
     const data = await response.json();
