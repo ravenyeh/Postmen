@@ -1,5 +1,6 @@
 import { PostForm } from "@/components/post-form";
 import { PostPreview } from "@/components/post-preview";
+import { TrendDisplay } from "@/components/trend-display";
 
 export default function Home() {
   return (
@@ -30,8 +31,9 @@ export default function Home() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <div className="grid gap-8 lg:grid-cols-[400px_1fr]">
-          {/* 左側：輸入表單 */}
-          <aside className="lg:sticky lg:top-24 lg:self-start">
+          {/* 左側：熱門話題 + 輸入表單 */}
+          <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
+            <TrendDisplay />
             <PostForm />
           </aside>
 

@@ -5,6 +5,7 @@ import type {
   Persona,
   Tone,
   Length,
+  TrendData,
 } from "@/types";
 
 interface PostGeneratorState {
@@ -18,6 +19,12 @@ interface PostGeneratorState {
   isLoading: boolean;
   // 錯誤訊息
   error: string | null;
+
+  // 熱門話題相關
+  trends: TrendData | null;
+  trendsLoading: boolean;
+  trendsError: string | null;
+  trendsUpdatedAt: string | null;
 
   // Actions
   setTopic: (topic: string) => void;
@@ -38,6 +45,10 @@ interface PostGeneratorState {
 
   // 生成貼文
   generatePosts: () => Promise<void>;
+
+  // 熱門話題相關
+  fetchTrends: () => Promise<void>;
+  setTrends: (trends: TrendData) => void;
 }
 
 const defaultInput: UserInput = {
@@ -57,6 +68,12 @@ export const usePostGeneratorStore = create<PostGeneratorState>((set, get) => ({
   trendsUsed: [],
   isLoading: false,
   error: null,
+
+  // 熱門話題初始狀態
+  trends: null,
+  trendsLoading: false,
+  trendsError: null,
+  trendsUpdatedAt: null,
 
   // Input setters
   setTopic: (topic) =>
@@ -82,9 +99,38 @@ export const usePostGeneratorStore = create<PostGeneratorState>((set, get) => ({
   setError: (error) => set({ error }),
   clearResults: () => set({ posts: [], trendsUsed: [], error: null }),
 
+  // 熱門話題 setter
+  setTrends: (trends) =>
+    set({ trends, trendsUpdatedAt: trends.updatedAt }),
+
+  // 取得熱門話題
+  fetchTrends: async () => {
+    set({ trendsLoading: true, trendsError: null });
+
+    try {
+      const response = await fetch("/api/trends");
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "無法取得熱門話題");
+      }
+
+      set({
+        trends: data,
+        trendsUpdatedAt: data.updatedAt,
+        trendsLoading: false,
+      });
+    } catch (err) {
+      set({
+        trendsError: err instanceof Error ? err.message : "取得熱門話題失敗",
+        trendsLoading: false,
+      });
+    }
+  },
+
   // 生成貼文
   generatePosts: async () => {
-    const { input } = get();
+    const { input, trends } = get();
 
     if (!input.topic.trim()) {
       set({ error: "請輸入主題或靈感" });
@@ -94,12 +140,20 @@ export const usePostGeneratorStore = create<PostGeneratorState>((set, get) => ({
     set({ isLoading: true, error: null, posts: [], trendsUsed: [] });
 
     try {
+      // 如果要結合熱門話題且已有話題資料，傳送給 API
+      const requestBody = {
+        ...input,
+        currentTrends: input.includeTrend && trends
+          ? [...trends.threads, ...trends.news, ...trends.google]
+          : undefined,
+      };
+
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(input),
+        body: JSON.stringify(requestBody),
       });
 
       const data = await response.json();

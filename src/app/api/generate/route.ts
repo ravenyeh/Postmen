@@ -170,9 +170,15 @@ function getSuggestedTime(template: TemplateType): string {
   return times[Math.floor(Math.random() * times.length)];
 }
 
+// 擴展的請求類型，包含前端傳來的熱門話題
+interface GenerateRequestBody extends UserInput {
+  currentTrends?: string[];
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const input: UserInput = await request.json();
+    const body: GenerateRequestBody = await request.json();
+    const { currentTrends, ...input } = body;
 
     // 驗證輸入
     if (!input.topic || typeof input.topic !== "string") {
@@ -186,11 +192,13 @@ export async function POST(request: NextRequest) {
     if (!PERPLEXITY_API_KEY) {
       console.warn("Perplexity API key not configured, using mock response");
       // 返回模擬回應（開發用）
-      return NextResponse.json(getMockResponse(input));
+      return NextResponse.json(getMockResponse(input, currentTrends));
     }
 
-    // 取得熱門話題
-    const trends = input.includeTrend ? getMockTrends() : [];
+    // 使用前端傳來的熱門話題，或使用備援資料
+    const trends = input.includeTrend
+      ? (currentTrends?.slice(0, 5) || getMockTrends())
+      : [];
 
     // 建構 Prompt
     const prompt = buildPrompt(input, trends);
@@ -276,9 +284,11 @@ export async function POST(request: NextRequest) {
 }
 
 // 模擬回應（開發用）
-function getMockResponse(input: UserInput): GenerationResponse {
+function getMockResponse(input: UserInput, currentTrends?: string[]): GenerationResponse {
   const templates = MVP_TEMPLATES.slice(0, input.variations);
-  const trends = input.includeTrend ? getMockTrends() : [];
+  const trends = input.includeTrend
+    ? (currentTrends?.slice(0, 3) || getMockTrends())
+    : [];
 
   const mockPosts: Record<TemplateType, { content: string; hashtags: string[] }> = {
     story: {
