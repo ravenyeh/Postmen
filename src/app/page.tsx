@@ -5,8 +5,9 @@ import { PostForm } from "@/components/post-form";
 import { PostPreview } from "@/components/post-preview";
 import { TrendDisplay } from "@/components/trend-display";
 import { ThreadsAnalyzer } from "@/components/threads-analyzer";
+import { ViralExplorer } from "@/components/viral-explorer";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Sparkles, BarChart3 } from "lucide-react";
+import { Sparkles, BarChart3, Globe } from "lucide-react";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("generator");
@@ -39,10 +40,14 @@ export default function Home() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
+          <TabsList className="grid w-full max-w-xl mx-auto grid-cols-3">
             <TabsTrigger value="generator" className="gap-2">
               <Sparkles className="w-4 h-4" />
               貼文產生
+            </TabsTrigger>
+            <TabsTrigger value="viral" className="gap-2">
+              <Globe className="w-4 h-4" />
+              國外爆款
             </TabsTrigger>
             <TabsTrigger value="analyzer" className="gap-2">
               <BarChart3 className="w-4 h-4" />
@@ -62,6 +67,12 @@ export default function Home() {
               <section className="min-h-[400px]">
                 <PostPreview />
               </section>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="viral" className="mt-6">
+            <div className="max-w-4xl mx-auto">
+              <ViralExplorer />
             </div>
           </TabsContent>
 
