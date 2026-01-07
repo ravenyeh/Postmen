@@ -1,8 +1,16 @@
+"use client";
+
+import { useState } from "react";
 import { PostForm } from "@/components/post-form";
 import { PostPreview } from "@/components/post-preview";
 import { TrendDisplay } from "@/components/trend-display";
+import { ThreadsAnalyzer } from "@/components/threads-analyzer";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Sparkles, BarChart3 } from "lucide-react";
 
 export default function Home() {
+  const [activeTab, setActiveTab] = useState("generator");
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -30,18 +38,39 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        <div className="grid gap-8 lg:grid-cols-[400px_1fr]">
-          {/* 左側：熱門話題 + 輸入表單 */}
-          <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
-            <TrendDisplay />
-            <PostForm />
-          </aside>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
+            <TabsTrigger value="generator" className="gap-2">
+              <Sparkles className="w-4 h-4" />
+              貼文產生
+            </TabsTrigger>
+            <TabsTrigger value="analyzer" className="gap-2">
+              <BarChart3 className="w-4 h-4" />
+              帳號分析
+            </TabsTrigger>
+          </TabsList>
 
-          {/* 右側：結果展示 */}
-          <section className="min-h-[400px]">
-            <PostPreview />
-          </section>
-        </div>
+          <TabsContent value="generator" className="mt-6">
+            <div className="grid gap-8 lg:grid-cols-[400px_1fr]">
+              {/* 左側：熱門話題 + 輸入表單 */}
+              <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
+                <TrendDisplay />
+                <PostForm />
+              </aside>
+
+              {/* 右側：結果展示 */}
+              <section className="min-h-[400px]">
+                <PostPreview />
+              </section>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="analyzer" className="mt-6">
+            <div className="max-w-4xl mx-auto">
+              <ThreadsAnalyzer />
+            </div>
+          </TabsContent>
+        </Tabs>
       </main>
 
       {/* Footer */}
