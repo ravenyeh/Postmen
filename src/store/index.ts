@@ -15,6 +15,8 @@ interface PostGeneratorState {
   posts: GeneratedPost[];
   // 使用的熱門話題
   trendsUsed: string[];
+  // AI 搜尋發現的爆款技巧
+  viralTechniques: string[];
   // 載入狀態
   isLoading: boolean;
   // 錯誤訊息
@@ -66,6 +68,7 @@ export const usePostGeneratorStore = create<PostGeneratorState>((set, get) => ({
   input: defaultInput,
   posts: [],
   trendsUsed: [],
+  viralTechniques: [],
   isLoading: false,
   error: null,
 
@@ -97,7 +100,7 @@ export const usePostGeneratorStore = create<PostGeneratorState>((set, get) => ({
   setPosts: (posts) => set({ posts }),
   setTrendsUsed: (trendsUsed) => set({ trendsUsed }),
   setError: (error) => set({ error }),
-  clearResults: () => set({ posts: [], trendsUsed: [], error: null }),
+  clearResults: () => set({ posts: [], trendsUsed: [], viralTechniques: [], error: null }),
 
   // 熱門話題 setter
   setTrends: (trends) =>
@@ -137,7 +140,7 @@ export const usePostGeneratorStore = create<PostGeneratorState>((set, get) => ({
       return;
     }
 
-    set({ isLoading: true, error: null, posts: [], trendsUsed: [] });
+    set({ isLoading: true, error: null, posts: [], trendsUsed: [], viralTechniques: [] });
 
     try {
       // 如果要結合熱門話題且已有話題資料，傳送給 API
@@ -165,6 +168,7 @@ export const usePostGeneratorStore = create<PostGeneratorState>((set, get) => ({
       set({
         posts: data.posts,
         trendsUsed: data.trendUsed || [],
+        viralTechniques: data.viralTechniques || [],
         isLoading: false,
       });
     } catch (err) {

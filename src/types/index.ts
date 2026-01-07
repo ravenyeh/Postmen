@@ -40,6 +40,7 @@ export interface GenerationRequest {
 export interface GenerationResponse {
   posts: GeneratedPost[];
   trendUsed?: string[];
+  viralTechniques?: string[];  // AI 搜尋發現並應用的爆款技巧
   error?: string;
 }
 

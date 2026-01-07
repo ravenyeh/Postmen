@@ -59,35 +59,44 @@ function getMockTrends(): string[] {
   return trends.sort(() => Math.random() - 0.5).slice(0, 3);
 }
 
-// 建構 Prompt
+// 建構 Prompt - 結合即時搜尋爆款貼文特徵
 function buildPrompt(input: UserInput, trends: string[]): string {
   const selectedTemplates = MVP_TEMPLATES.slice(0, input.variations);
   const templateInstructions = selectedTemplates
     .map((t, i) => `${i + 1}. ${TEMPLATE_INSTRUCTIONS[t]}`)
     .join("\n");
 
-  return `你是一個專業的社群媒體文案專家，專精於撰寫 Threads 爆款貼文。你了解台灣用戶的語言習慣和文化脈絡。
+  return `你是一個專業的社群媒體文案專家。在生成貼文之前，請先搜尋並分析以下資訊：
 
-【用戶設定】
+【第一步：搜尋分析】
+請搜尋「Threads 爆款貼文特徵」、「高互動社群貼文結構」、「台灣 Threads 熱門貼文」等關鍵字，了解：
+1. 目前 Threads 上高互動貼文的共同特徵
+2. 什麼樣的開頭最能抓住注意力
+3. 哪些話題和表達方式最容易引發共鳴
+4. 成功的貼文通常有什麼結構
+
+【第二步：應用分析結果生成貼文】
+
+用戶設定：
 - 身份定位：${PERSONA_DESCRIPTIONS[input.persona]}
 - 主題/靈感：${input.topic}
 - 語氣風格：${TONE_DESCRIPTIONS[input.tone]}
 - 字數限制：${LENGTH_LIMITS[input.length]}
 - 使用 Emoji：${input.includeEmoji ? "是，適當使用 emoji 增加趣味" : "否，不使用 emoji"}
 
-${input.includeTrend ? `【當前熱門話題參考】\n${trends.join("、")}\n可以嘗試巧妙融入這些話題元素，但不要生硬。` : ""}
+${input.includeTrend && trends.length > 0 ? `當前熱門話題參考：${trends.join("、")}\n可以嘗試巧妙融入這些話題元素，但不要生硬。` : ""}
 
-【任務】
-請產生 ${input.variations} 個版本的 Threads 貼文，每個使用不同的文案框架：
+請根據你搜尋到的爆款貼文特徵，產生 ${input.variations} 個版本的 Threads 貼文，每個使用不同的文案框架：
 
 ${templateInstructions}
 
 【重要規則】
 1. 貼文要接地氣，符合台灣年輕人的說話方式
-2. 內容要有記憶點，讓人想按讚或分享
-3. 避免說教或太正經，要有社群感
-4. 每個版本要有明顯不同的切入角度
-5. 字數嚴格控制在限制內
+2. 運用你搜尋到的爆款貼文技巧（如：懸念開頭、情緒共鳴、反轉結尾等）
+3. 內容要有記憶點，讓人想按讚或分享
+4. 避免說教或太正經，要有社群感
+5. 每個版本要有明顯不同的切入角度
+6. 字數嚴格控制在限制內
 
 【輸出格式】
 請以 JSON 格式輸出，格式如下：
@@ -97,9 +106,10 @@ ${templateInstructions}
       "content": "貼文內容",
       "template": "story|contrast|quote",
       "hashtags": ["建議的hashtag，2-3個"],
-      "reasoning": "簡短說明這個版本的設計思路"
+      "reasoning": "說明這個版本運用了什麼爆款技巧"
     }
-  ]
+  ],
+  "viralTechniques": ["列出你從搜尋中發現並應用的爆款技巧，2-3個"]
 }
 
 只輸出 JSON，不要有其他文字。`;
@@ -283,6 +293,7 @@ export async function POST(request: NextRequest) {
     const result: GenerationResponse = {
       posts,
       trendUsed: input.includeTrend ? trends : undefined,
+      viralTechniques: parsedContent.viralTechniques || [],
     };
 
     return NextResponse.json(result);

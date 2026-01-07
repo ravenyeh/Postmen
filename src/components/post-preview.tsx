@@ -13,6 +13,7 @@ import {
   Share2,
   Timer,
   AlertCircle,
+  Lightbulb,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -158,7 +159,7 @@ function PostCard({ post, index }: PostCardProps) {
 }
 
 export function PostPreview() {
-  const { posts, trendsUsed, isLoading, error } = usePostGeneratorStore();
+  const { posts, trendsUsed, viralTechniques, isLoading, error } = usePostGeneratorStore();
 
   if (error) {
     return (
@@ -208,6 +209,30 @@ export function PostPreview() {
 
   return (
     <div className="space-y-4">
+      {/* AI 發現的爆款技巧 */}
+      {viralTechniques.length > 0 && (
+        <Card className="border-amber-500/20 bg-amber-500/5">
+          <CardContent className="py-3">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <Lightbulb className="h-4 w-4 text-amber-500" />
+                <span>AI 搜尋發現的爆款技巧</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {viralTechniques.map((technique, i) => (
+                  <span
+                    key={i}
+                    className="rounded-full bg-amber-500/10 px-3 py-1 text-xs text-amber-700 dark:text-amber-300"
+                  >
+                    {technique}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* 使用的熱門話題 */}
       {trendsUsed.length > 0 && (
         <Card className="border-primary/20 bg-primary/5">
